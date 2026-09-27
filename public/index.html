@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="iPhoneBooth" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <title>iPhoneBooth</title>
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="stylesheet" href="/css/booth.css" />
+  </head>
+  <body>
+    <div id="app" class="app" data-scene="start">
+      <video id="camera" class="camera" playsinline autoplay muted></video>
+      <div class="scrim" aria-hidden="true"></div>
+      <div id="guide" class="guide" aria-hidden="true"></div>
+      <div id="flash" class="flash" aria-hidden="true"></div>
+      <div id="countdown" class="countdown" aria-live="assertive"></div>
+
+      <header class="topbar">
+        <button id="homeBtn" class="brand" type="button" aria-label="iPhoneBooth — back to start">
+          <span class="brand-dot" aria-hidden="true"></span>iPhoneBooth
+        </button>
+        <ol id="rail" class="rail" aria-label="Progress"></ol>
+        <button id="settingsBtn" class="icon-btn" type="button" aria-label="Settings">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
+        </button>
+      </header>
+
+      <!-- START -->
+      <section class="scene scene-start" data-scene="start">
+        <div class="start-hero">
+          <div class="start-strip" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <div class="start-copy">
+            <p class="eyebrow">Self-serve photo booth</p>
+            <h1>Strike<br />a pose.</h1>
+            <p class="lede">Pick a frame, shoot six, keep your best four. Save, AirDrop or print in about a minute.</p>
+            <button id="startBtn" class="btn btn-primary btn-xl" type="button">
+              Tap to start <span aria-hidden="true">→</span>
+            </button>
+            <p id="startError" class="notice" role="alert" hidden></p>
+          </div>
+        </div>
+        <footer class="start-foot">
+          <a href="/print">Print station</a>
+          <span aria-hidden="true">·</span>
+          <button id="helpBtn" class="link" type="button">Phone setup</button>
+        </footer>
+      </section>
+
+      <!-- SIZE -->
+      <section class="scene" data-scene="size" hidden>
+        <header class="scene-head">
+          <p class="step">Step 1</p>
+          <h2>Pick a size</h2>
+          <p class="sub">Every size prints on a 4×6.</p>
+        </header>
+        <div class="scene-body scroll"><div id="layoutGrid" class="choice-grid layouts"></div></div>
+        <footer class="dock">
+          <button class="btn btn-ghost" type="button" data-back>Back</button>
+          <button class="btn btn-primary" type="button" data-next>Next</button>
+        </footer>
+      </section>
+
+      <!-- FRAME -->
+      <section class="scene" data-scene="frame" hidden>
+        <header class="scene-head">
+          <p class="step">Step 2</p>
+          <h2>Pick a frame</h2>
+          <p class="sub">Your photos go in the empty boxes.</p>
+        </header>
+        <div class="scene-body scroll">
+          <div id="packTabs" class="tabs" role="tablist"></div>
+          <div id="frameGrid" class="choice-grid frames"></div>
+        </div>
+        <footer class="dock">
+          <button class="btn btn-ghost" type="button" data-back>Back</button>
+          <button class="btn btn-primary" type="button" data-next>Start shooting</button>
+        </footer>
+      </section>
+
+      <!-- BOOTH -->
+      <section class="scene scene-booth" data-scene="booth" hidden>
+        <p id="shotLabel" class="pill booth-label" aria-live="polite">Get in the frame</p>
+        <div class="booth-dock">
+          <div id="shotRail" class="shot-rail"></div>
+          <div class="booth-controls">
+            <button id="boothBack" class="icon-btn lg" type="button" aria-label="Back to frames">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+            </button>
+            <button id="shutterBtn" class="shutter" type="button" aria-label="Start the countdown">
+              <svg viewBox="0 0 100 100" aria-hidden="true"><circle class="ring-bg" cx="50" cy="50" r="46" /><circle id="ring" class="ring" cx="50" cy="50" r="46" /></svg>
+              <span class="shutter-core"></span>
+            </button>
+            <button id="flipBtn" class="icon-btn lg" type="button" aria-label="Switch camera">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><path d="M9.5 13.5a2.5 2.5 0 0 1 4.6-1.3M14.5 12.5a2.5 2.5 0 0 1-4.6 1.3" /><path d="M14.2 10.5v1.8h-1.8M9.8 15.5v-1.8h1.8" /></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- PICK -->
+      <section class="scene" data-scene="pick" hidden>
+        <header class="scene-head">
+          <p class="step">Step 4</p>
+          <h2 id="pickTitle">Pick your 4</h2>
+          <p class="sub">Tap a shot to add or remove it. Tap a box on the strip to clear it.</p>
+        </header>
+        <div class="scene-body split">
+          <div class="preview"><canvas id="pickCanvas" class="strip-canvas"></canvas></div>
+          <div class="panel"><div id="pool" class="pool"></div></div>
+        </div>
+        <footer class="dock">
+          <button id="pickRetake" class="btn btn-ghost" type="button">Retake</button>
+          <p id="pickNote" class="dock-note"></p>
+          <button class="btn btn-primary" type="button" data-next>Next</button>
+        </footer>
+      </section>
+
+      <!-- FILTER -->
+      <section class="scene" data-scene="filter" hidden>
+        <header class="scene-head">
+          <p class="step">Step 5</p>
+          <h2>Pick a filter</h2>
+          <p class="sub">It changes the whole strip.</p>
+        </header>
+        <div class="scene-body split">
+          <div class="preview"><canvas id="filterCanvas" class="strip-canvas"></canvas></div>
+          <div class="panel"><div id="filterRow" class="filter-row" role="listbox" aria-label="Filters"></div></div>
+        </div>
+        <footer class="dock">
+          <button class="btn btn-ghost" type="button" data-back>Back</button>
+          <button class="btn btn-primary" type="button" data-next>Next</button>
+        </footer>
+      </section>
+
+      <!-- DECORATE -->
+      <section class="scene" data-scene="decorate" hidden>
+        <header class="scene-head">
+          <p class="step">Step 6</p>
+          <h2>Make it yours</h2>
+          <p class="sub">Stickers, doodles and a caption. Or skip it.</p>
+        </header>
+        <div class="scene-body split">
+          <div id="decoWrap" class="preview deco-wrap">
+            <div id="decoStage" class="deco-stage" data-mode="sticker">
+              <canvas id="decoBase"></canvas>
+              <canvas id="decoDraw"></canvas>
+              <div id="decoLayer" class="deco-layer"></div>
+            </div>
+          </div>
+          <div class="panel deco-panel">
+            <div class="tabs" role="tablist">
+              <button class="tab on" type="button" role="tab" data-tool="sticker">Stickers</button>
+              <button class="tab" type="button" role="tab" data-tool="draw">Draw</button>
+              <button class="tab" type="button" role="tab" data-tool="text">Text</button>
+            </div>
+            <div class="tool" data-panel="sticker">
+              <div id="stickerTray" class="sticker-tray"></div>
+            </div>
+            <div class="tool" data-panel="draw" hidden>
+              <div id="crayons" class="swatches"></div>
+              <div class="seg">
+                <button type="button" class="seg-btn on" data-size="fine">Fine</button>
+                <button type="button" class="seg-btn" data-size="bold">Bold</button>
+                <button type="button" class="seg-btn" data-size="erase">Eraser</button>
+              </div>
+            </div>
+            <div class="tool" data-panel="text" hidden>
+              <label class="field">
+                <span>Caption</span>
+                <input id="caption" maxlength="28" autocomplete="off" enterkeyhint="done" placeholder="Add a caption" />
+              </label>
+              <label class="check"><input id="dateToggle" type="checkbox" checked /> <span>Show the date</span></label>
+            </div>
+            <div class="tool-actions">
+              <button id="decoUndo" class="icon-btn" type="button" aria-label="Undo" title="Undo">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14L4 9l5-5" /><path d="M4 9h11a5 5 0 0 1 0 10h-3" /></svg>
+              </button>
+              <button id="decoClear" class="icon-btn" type="button" aria-label="Clear all" title="Clear all">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" /></svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        <footer class="dock">
+          <button class="btn btn-ghost" type="button" data-back>Back</button>
+          <button class="btn btn-primary" type="button" data-next>Finish</button>
+        </footer>
+      </section>
+
+      <!-- DONE -->
+      <section class="scene" data-scene="done" hidden>
+        <header class="scene-head">
+          <p class="step">Done</p>
+          <h2>Looking good.</h2>
+          <p id="doneSub" class="sub">Save it, print it, send it.</p>
+        </header>
+        <div class="scene-body split">
+          <div class="preview"><img id="finalImg" class="strip-img" alt="Your finished photo strip" /></div>
+          <div class="panel done-panel">
+            <button id="saveBtn" class="btn btn-primary btn-block" type="button">Save photo</button>
+            <div class="action-grid">
+              <button id="printBtn" class="action" type="button"><b>Print</b><span>this device</span></button>
+              <button id="stationBtn" class="action" type="button"><b>Print station</b><span id="stationStatus">sending…</span></button>
+              <button id="clipBtn" class="action" type="button" hidden><b>Booth clip</b><span id="clipStatus">video</span></button>
+              <button id="wallBtn" class="action" type="button"><b>Wallpaper</b><span>lock screen</span></button>
+            </div>
+            <div class="done-foot">
+              <button id="retakeBtn" class="btn btn-ghost" type="button">Retake</button>
+              <button id="newBtn" class="btn btn-ghost" type="button">New guests</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Settings -->
+    <div id="settings" class="sheet" hidden>
+      <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="settingsTitle">
+        <header class="sheet-head">
+          <h2 id="settingsTitle">Booth settings</h2>
+          <button id="closeSettings" class="icon-btn" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          </button>
+        </header>
+        <div class="sheet-body">
+          <div class="row"><span>Countdown</span>
+            <div class="seg" data-setting="countdown">
+              <button type="button" class="seg-btn" data-value="3">3s</button>
+              <button type="button" class="seg-btn" data-value="5">5s</button>
+              <button type="button" class="seg-btn" data-value="10">10s</button>
+            </div>
+          </div>
+          <div class="row"><span>Between shots</span>
+            <div class="seg" data-setting="gap">
+              <button type="button" class="seg-btn" data-value="800">Quick</button>
+              <button type="button" class="seg-btn" data-value="1600">Classic</button>
+              <button type="button" class="seg-btn" data-value="2600">Relaxed</button>
+            </div>
+          </div>
+          <div class="row"><span>Camera</span>
+            <div class="seg" data-setting="facing">
+              <button type="button" class="seg-btn" data-value="user">Front</button>
+              <button type="button" class="seg-btn" data-value="environment">Back</button>
+            </div>
+          </div>
+          <label class="row switch"><span>Mirror like a booth</span><input type="checkbox" data-setting="mirror" /></label>
+          <label class="row switch"><span>Sounds</span><input type="checkbox" data-setting="sound" /></label>
+          <label class="row switch"><span>Record booth clip</span><input type="checkbox" data-setting="record" /></label>
+          <label class="row switch"><span>Send strips to print station</span><input type="checkbox" data-setting="autoSend" /></label>
+          <label class="row switch"><span>Reset after 90s idle</span><input type="checkbox" data-setting="idle" /></label>
+          <div id="hostInfo" class="host-info"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Idle -->
+    <div id="idle" class="sheet idle" hidden>
+      <div class="sheet-card idle-card" role="alertdialog" aria-labelledby="idleTitle">
+        <p id="idleCount" class="idle-count">15</p>
+        <h2 id="idleTitle">Still there?</h2>
+        <p class="sub">The booth resets for the next guests.</p>
+        <button id="idleStay" class="btn btn-primary btn-block" type="button">I'm still here</button>
+      </div>
+    </div>
+
+    <!-- Confirm -->
+    <div id="confirm" class="sheet" hidden>
+      <div class="sheet-card idle-card" role="alertdialog" aria-labelledby="confirmTitle">
+        <h2 id="confirmTitle">Retake?</h2>
+        <p id="confirmText" class="sub">Your shots will be replaced.</p>
+        <div class="confirm-actions">
+          <button id="confirmNo" class="btn btn-ghost" type="button">Cancel</button>
+          <button id="confirmYes" class="btn btn-primary" type="button">Retake</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script type="module" src="/js/main.js"></script>
+  </body>
+</html>

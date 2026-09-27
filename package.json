@@ -1,0 +1,10 @@
+{
+  "name": "iphonebooth",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Local 4-photo strip photobooth for iPhone and Mac",
+  "scripts": {
+    "start": "python3 server.py",
+    "start:http": "python3 server.py --http"
+  }
+}

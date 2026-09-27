@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0b0b0d" />
+    <title>iPhoneBooth Print Station</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/css/booth.css" />
+  </head>
+  <body class="print-app">
+    <main class="print-shell">
+      <header class="topbar">
+        <a class="brand" href="/"><span class="brand-dot" aria-hidden="true"></span>iPhoneBooth · print station</a>
+        <label class="row switch" style="border:0;min-height:0"><span>Auto-print</span><input id="autoPrint" type="checkbox" /></label>
+      </header>
+
+      <section id="empty" class="print-empty">
+        <div>
+          <b>Waiting for the first strip</b>
+          <p id="emptyText">Keep this page open. Strips from the booth land here, ready for 4×6.</p>
+        </div>
+      </section>
+
+      <section id="latest" class="print-hero" hidden>
+        <div class="print-latest"><img id="latestImg" alt="Latest photo strip, 4×6 print layout" /></div>
+        <div class="print-side">
+          <p class="step">Latest</p>
+          <p id="latestMeta" class="print-meta"></p>
+          <button id="printLatest" class="btn btn-primary btn-block" type="button">Print 4×6</button>
+          <a id="openLatest" class="btn btn-ghost btn-block" target="_blank" rel="noopener">Open full size</a>
+          <button id="dismissLatest" class="btn btn-ghost btn-block" type="button">Remove</button>
+          <p class="sub">Printer: 4×6 photo paper, borderless, scale 100%. Strips print two-up — cut down the middle.</p>
+        </div>
+      </section>
+
+      <p id="queueTitle" class="queue-title" hidden>Earlier</p>
+      <section id="queue" class="queue"></section>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script type="module" src="/js/print-station.js"></script>
+  </body>
+</html>
