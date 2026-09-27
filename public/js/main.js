@@ -721,7 +721,7 @@ enter.done = async () => {
 
 function setStation(status) {
   S.upload = status;
-  const label = { idle: "tap to send", sending: "sending…", sent: "queued ✓", failed: "failed · tap to retry", off: "tap to send" }[status];
+  const label = { idle: "tap to send", sending: "sending…", sent: "queued ✓ · tap to open", failed: "failed · tap to retry", off: "tap to send" }[status];
   $("#stationStatus").textContent = label;
   $("#stationBtn").classList.toggle("ok", status === "sent");
   $("#stationBtn").classList.toggle("bad", status === "failed");
@@ -761,7 +761,7 @@ function ready(key) {
 $("#saveBtn").addEventListener("click", async () => {
   if (!ready("strip")) return;
   const r = await saveOrShare(S.exports.strip, `${S.exports.name}.jpg`);
-  if (r === "downloaded") toast("Saved to downloads");
+  if (r === "downloaded") toast("Photo saved to Downloads");
 });
 $("#printBtn").addEventListener("click", () => {
   if (!ready("printUrl")) return;
@@ -769,7 +769,9 @@ $("#printBtn").addEventListener("click", () => {
 });
 $("#stationBtn").addEventListener("click", () => {
   if (S.upload === "sent") {
-    toast("Already in the print queue");
+    // Open synchronously inside the tap so the browser doesn't block the new tab.
+    const tab = window.open("/print", "_blank");
+    if (!tab) toast("Pop-up blocked. Open /print on this host to see the queue.");
     return;
   }
   if (!ready("print")) return;
@@ -777,12 +779,13 @@ $("#stationBtn").addEventListener("click", () => {
 });
 $("#clipBtn").addEventListener("click", async () => {
   if (!S.clip) return;
-  await saveOrShare(S.clip, `${S.exports?.name || "iphonebooth"}.${videoExt(S.clip)}`);
+  const r = await saveOrShare(S.clip, `${S.exports?.name || "iphonebooth"}.${videoExt(S.clip)}`);
+  if (r === "downloaded") toast("Clip saved to Downloads");
 });
 $("#wallBtn").addEventListener("click", async () => {
   if (!ready("wall")) return;
   const r = await saveOrShare(S.exports.wall, `${S.exports.name}-wallpaper.jpg`);
-  if (r === "downloaded") toast("Wallpaper saved");
+  if (r === "downloaded") toast("Wallpaper saved to Downloads");
 });
 $("#retakeBtn").addEventListener("click", async () => {
   if (await ask("Retake?", "Same size, frame and filter. New photos.", "Retake")) {
@@ -914,7 +917,7 @@ fetchInfo().then((info) => {
   title.textContent = "Phone setup";
   const steps = document.createElement("ol");
   const items = [
-    lan.length ? `On the iPhone (same Wi-Fi), open ${lan.join(" or ")}` : "Connect the Mac to Wi-Fi to get a phone address.",
+    lan.length ? `On any phone or laptop on the same Wi-Fi, open ${lan.join(" or ")}` : "Connect this host to Wi-Fi to get an address for other devices.",
     "Safari warns about the certificate: tap Show Details → visit this website.",
     `If the camera stays blocked, open ${lan[0] || location.origin}/api/cert, install the profile, then trust “iPhoneBooth Local” in Settings → General → About → Certificate Trust Settings.`,
     "Share → Add to Home Screen for a full-screen booth.",

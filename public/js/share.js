@@ -46,12 +46,19 @@ export function blobToDataUrl(blob) {
   });
 }
 
-// Share sheet when the device has one (iPhone: Save Image, AirDrop, Messages…),
-// otherwise a plain download. Must run inside the tap handler, so the blob is
-// prepared ahead of time.
+// Phones and tablets get the share sheet (Save Image, AirDrop, Messages…). Computers
+// download straight away: desktop browsers report file sharing as supported, but the
+// share popover is easy to miss and often never resolves, so nothing seems to happen.
+export function isHandheld() {
+  const ua = navigator.userAgent;
+  // iPadOS Safari reports itself as a Mac; touch points give it away.
+  return /iPhone|iPad|iPod|Android/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+}
+
+// Must run inside the tap handler, so the blob is prepared ahead of time.
 export async function saveOrShare(blob, name) {
   const file = new File([blob], name, { type: blob.type });
-  if (navigator.canShare?.({ files: [file] })) {
+  if (isHandheld() && navigator.canShare?.({ files: [file] })) {
     try {
       await navigator.share({ files: [file] });
       return "shared";
@@ -71,7 +78,7 @@ export function downloadBlob(blob, name) {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 4000);
+  setTimeout(() => URL.revokeObjectURL(url), 30_000);
 }
 
 // Prints through a hidden iframe (no pop-up to block) and waits for the image to decode
